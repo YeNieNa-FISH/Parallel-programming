@@ -27,10 +27,10 @@ void reset(float(*m)[column_], float(*m_copy)[column_]) {
     }
 }
 /*
-* ´®ÐÐËã·¨
+* ä¸²è¡Œç®—æ³•
 */
 void simple_serial_elimination(float(*m)[column_]) {
-    auto t1 = system_clock::now();//¼ÆÊ±¿ªÊ¼
+    auto t1 = system_clock::now();//è®¡æ—¶å¼€å§‹
     for (int i = 0; i < column_ - 1; ++i) {
         for (int j = i + 1; j < row_; ++j) {
             float temp = m[j][i] / m[i][i];
@@ -40,8 +40,8 @@ void simple_serial_elimination(float(*m)[column_]) {
             m[j][i] = 0.00f;
         }
     }
-    auto t2 = system_clock::now();//¼ÆÊ±½áÊø
-    cout << "´®ÐÐÓÃÊ±\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
+    auto t2 = system_clock::now();//è®¡æ—¶ç»“æŸ
+    cout << "ä¸²è¡Œç”¨æ—¶\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
 }
 
 void align_simple_serial_elimination(float(*m_)[column_]) {
@@ -56,7 +56,7 @@ void align_simple_serial_elimination(float(*m_)[column_]) {
             m[i][j] = m_[i][j];
         }
     }
-    auto t1 = system_clock::now();//¼ÆÊ±¿ªÊ¼
+    auto t1 = system_clock::now();//è®¡æ—¶å¼€å§‹
     for (int i = 0; i < column_ - 1; ++i) {
         for (int j = i + 1; j < row_; ++j) {
             float temp = m[j][i] / m[i][i];
@@ -66,41 +66,41 @@ void align_simple_serial_elimination(float(*m_)[column_]) {
             m[j][i] = 0.00f;
         }
     }
-    auto t2 = system_clock::now();//¼ÆÊ±½áÊø
-    cout << "¶ÔÆë´®ÐÐÓÃÊ±\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
+    auto t2 = system_clock::now();//è®¡æ—¶ç»“æŸ
+    cout << "å¯¹é½ä¸²è¡Œç”¨æ—¶\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
     for (size_t i = 0; i < row_; ++i) {
-        _aligned_free(m[i]); // ÊÍ·ÅÃ¿Ò»ÐÐµÄÄÚ´æ
+        _aligned_free(m[i]); // é‡Šæ”¾æ¯ä¸€è¡Œçš„å†…å­˜
     }
-    _aligned_free(m); // ÊÍ·ÅÐÐÖ¸ÕëÊý×éµÄÄÚ´æ
+    _aligned_free(m); // é‡Šæ”¾è¡ŒæŒ‡é’ˆæ•°ç»„çš„å†…å­˜
 }
 
 /*
-* SSE²¢ÐÐËã·¨
+* SSEå¹¶è¡Œç®—æ³•
 */
 void SSE_parallel_elimination(float(*m)[column_]) {
-    auto t1 = system_clock::now();//¼ÆÊ±¿ªÊ¼
+    auto t1 = system_clock::now();//è®¡æ—¶å¼€å§‹
     for (int i = 0; i < column_ - 1; ++i) {
         for (int j = i + 1; j < row_; ++j) {
             float temp = m[j][i] / m[i][i];
-            __m128 temp_vec = _mm_set1_ps(temp); // ½«temp¹ã²¥µ½ËÄ¸öÔªËØÖÐ
+            __m128 temp_vec = _mm_set1_ps(temp); // å°†tempå¹¿æ’­åˆ°å››ä¸ªå…ƒç´ ä¸­
 
             int k;
-            // Ê¹ÓÃSSE´¦ÀíÄÜ±»4Õû³ýµÄ²¿·Ö
+            // ä½¿ç”¨SSEå¤„ç†èƒ½è¢«4æ•´é™¤çš„éƒ¨åˆ†
             for (k = i + 1; k <= column_ - 4; k += 4) {
-                __m128 vec_i = _mm_loadu_ps(&m[i][k]); // ¼ÓÔØm[i][k]µ½k+3Ö®¼äµÄËÄ¸öÔªËØ
-                __m128 vec_j = _mm_loadu_ps(&m[j][k]); // ¼ÓÔØm[j][k]µ½k+3Ö®¼äµÄËÄ¸öÔªËØ
+                __m128 vec_i = _mm_loadu_ps(&m[i][k]); // åŠ è½½m[i][k]åˆ°k+3ä¹‹é—´çš„å››ä¸ªå…ƒç´ 
+                __m128 vec_j = _mm_loadu_ps(&m[j][k]); // åŠ è½½m[j][k]åˆ°k+3ä¹‹é—´çš„å››ä¸ªå…ƒç´ 
                 __m128 result = _mm_sub_ps(vec_j, _mm_mul_ps(vec_i, temp_vec));
                 _mm_storeu_ps(&m[j][k], result);
             }
-            // ´¦ÀíÊ£ÓàµÄÔªËØ
+            // å¤„ç†å‰©ä½™çš„å…ƒç´ 
             for (; k < column_; ++k) {
                 m[j][k] -= m[i][k] * temp;
             }
             m[j][i] = 0.0f;
         }
     }
-    auto t2 = system_clock::now();//¼ÆÊ±½áÊø
-    cout << "SSEÓÃÊ±\t\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
+    auto t2 = system_clock::now();//è®¡æ—¶ç»“æŸ
+    cout << "SSEç”¨æ—¶\t\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
 }
 
 void align_SSE_parallel_elimination(float(*m_)[column_]) {
@@ -117,33 +117,33 @@ void align_SSE_parallel_elimination(float(*m_)[column_]) {
         }
         //cout << &m[i][0] << "\t\t" << &m[i][column_ - 1] <<"\t\t";
     }
-    auto t1 = system_clock::now();//¼ÆÊ±¿ªÊ¼
+    auto t1 = system_clock::now();//è®¡æ—¶å¼€å§‹
     for (int i = 0; i < column_ - 1; ++i) {
         for (int j = i + 1; j < row_; ++j) {
             float temp = m[j][i] / m[i][i];
-            __m128 temp_vec = _mm_set1_ps(temp); // ½«temp¹ã²¥µ½ËÄ¸öÔªËØÖÐ
+            __m128 temp_vec = _mm_set1_ps(temp); // å°†tempå¹¿æ’­åˆ°å››ä¸ªå…ƒç´ ä¸­
 
             int k;
-            // Ê¹ÓÃSSE´¦ÀíÄÜ±»4Õû³ýµÄ²¿·Ö
+            // ä½¿ç”¨SSEå¤„ç†èƒ½è¢«4æ•´é™¤çš„éƒ¨åˆ†
             for (k = i + 1; k <= column_ - 4; k += 4) {
-                __m128 vec_i = _mm_loadu_ps(&m[i][k]); // ¼ÓÔØm[i][k]µ½k+3Ö®¼äµÄËÄ¸öÔªËØ
-                __m128 vec_j = _mm_loadu_ps(&m[j][k]); // ¼ÓÔØm[j][k]µ½k+3Ö®¼äµÄËÄ¸öÔªËØ
+                __m128 vec_i = _mm_loadu_ps(&m[i][k]); // åŠ è½½m[i][k]åˆ°k+3ä¹‹é—´çš„å››ä¸ªå…ƒç´ 
+                __m128 vec_j = _mm_loadu_ps(&m[j][k]); // åŠ è½½m[j][k]åˆ°k+3ä¹‹é—´çš„å››ä¸ªå…ƒç´ 
                 __m128 result = _mm_sub_ps(vec_j, _mm_mul_ps(vec_i, temp_vec));
                 _mm_storeu_ps(&m[j][k], result);
             }
-            // ´¦ÀíÊ£ÓàµÄÔªËØ
+            // å¤„ç†å‰©ä½™çš„å…ƒç´ 
             for (; k < column_; ++k) {
                 m[j][k] -= m[i][k] * temp;
             }
             m[j][i] = 0.0f;
         }
     }
-    auto t2 = system_clock::now();//¼ÆÊ±½áÊø
-    cout << "¶ÔÆëSSEÓÃÊ±\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
+    auto t2 = system_clock::now();//è®¡æ—¶ç»“æŸ
+    cout << "å¯¹é½SSEç”¨æ—¶\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
     for (size_t i = 0; i < row_; ++i) {
-        _aligned_free(m[i]); // ÊÍ·ÅÃ¿Ò»ÐÐµÄÄÚ´æ
+        _aligned_free(m[i]); // é‡Šæ”¾æ¯ä¸€è¡Œçš„å†…å­˜
     }
-    _aligned_free(m); // ÊÍ·ÅÐÐÖ¸ÕëÊý×éµÄÄÚ´æ
+    _aligned_free(m); // é‡Šæ”¾è¡ŒæŒ‡é’ˆæ•°ç»„çš„å†…å­˜
 }
 
 /*
@@ -155,18 +155,18 @@ void AVX_parallel_elimination(float(*m)[column_]) {
     for (int i = 0; i < column_ - 1; ++i) {
         for (int j = i + 1; j < row_; ++j) {
             float temp = m[j][i] / m[i][i];
-            __m256 temp_v = _mm256_set1_ps(temp); // ´´½¨Ò»¸ö°üº¬ 8 ¸ö temp µÄÏòÁ¿
-            for (int k = i + 1; k < column_; k += 8) { // Ã¿´Îµü´ú´¦Àí 8 ¸öÔªËØ
-                __m256 m_i_k = _mm256_loadu_ps(&m[i][k]); // ¼ÓÔØ m[i][k] µ½ m[i][k+7] µÄÔªËØ
-                __m256 m_j_k = _mm256_loadu_ps(&m[j][k]); // ¼ÓÔØ m[j][k] µ½ m[j][k+7] µÄÔªËØ
-                __m256 result = _mm256_fnmadd_ps(m_i_k, temp_v, m_j_k); // ¼ÆËã -m[i][k]*temp + m[j][k]
-                _mm256_storeu_ps(&m[j][k], result); // ´æ´¢½á¹ûµ½ m[j][k] µ½ m[j][k+7]
+            __m256 temp_v = _mm256_set1_ps(temp); // åˆ›å»ºä¸€ä¸ªåŒ…å« 8 ä¸ª temp çš„å‘é‡
+            for (int k = i + 1; k < column_; k += 8) { // æ¯æ¬¡è¿­ä»£å¤„ç† 8 ä¸ªå…ƒç´ 
+                __m256 m_i_k = _mm256_loadu_ps(&m[i][k]); // åŠ è½½ m[i][k] åˆ° m[i][k+7] çš„å…ƒç´ 
+                __m256 m_j_k = _mm256_loadu_ps(&m[j][k]); // åŠ è½½ m[j][k] åˆ° m[j][k+7] çš„å…ƒç´ 
+                __m256 result = _mm256_fnmadd_ps(m_i_k, temp_v, m_j_k); // è®¡ç®— -m[i][k]*temp + m[j][k]
+                _mm256_storeu_ps(&m[j][k], result); // å­˜å‚¨ç»“æžœåˆ° m[j][k] åˆ° m[j][k+7]
             }
             m[j][i] = 0.00f;
         }
     }
     auto t2 = system_clock::now();
-    cout << "AVXÓÃÊ±\t\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
+    cout << "AVXç”¨æ—¶\t\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
 }
 
 void align_AVX_parallel_elimination(float(*m_)[column_]) {
@@ -181,30 +181,30 @@ void align_AVX_parallel_elimination(float(*m_)[column_]) {
             m[i][j] = m_[i][j];
         }
     }
-    auto t1 = system_clock::now();//¼ÆÊ±¿ªÊ¼
+    auto t1 = system_clock::now();//è®¡æ—¶å¼€å§‹
     for (int i = 0; i < column_ - 1; ++i) {
         for (int j = i + 1; j < row_; ++j) {
             float temp = m[j][i] / m[i][i];
-            __m256 temp_v = _mm256_set1_ps(temp); // ´´½¨Ò»¸ö°üº¬ 8 ¸ö temp µÄÏòÁ¿
-            for (int k = i + 1; k + 7 < column_; k += 8) { // È·±£ÖÁÉÙ»¹ÓÐ8¸öÔªËØÐèÒª´¦Àí
+            __m256 temp_v = _mm256_set1_ps(temp); // åˆ›å»ºä¸€ä¸ªåŒ…å« 8 ä¸ª temp çš„å‘é‡
+            for (int k = i + 1; k + 7 < column_; k += 8) { // ç¡®ä¿è‡³å°‘è¿˜æœ‰8ä¸ªå…ƒç´ éœ€è¦å¤„ç†
                 __m256 m_i_k = _mm256_loadu_ps(&m[i][k]);
                 __m256 m_j_k = _mm256_loadu_ps(&m[j][k]);
                 __m256 result = _mm256_fnmadd_ps(m_i_k, temp_v, m_j_k);
                 _mm256_storeu_ps(&m[j][k], result);
             }
-            // ´¦ÀíÊ£ÓàµÄÔªËØ
+            // å¤„ç†å‰©ä½™çš„å…ƒç´ 
             for (int k = (column_ & ~7) + i + 1; k < column_; k++) {
                 m[j][k] -= m[i][k] * temp;
             }
             m[j][i] = 0.00f;
         }
     }
-    auto t2 = system_clock::now();//¼ÆÊ±½áÊø
-    cout << "¶ÔÆëAVXÓÃÊ±\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
+    auto t2 = system_clock::now();//è®¡æ—¶ç»“æŸ
+    cout << "å¯¹é½AVXç”¨æ—¶\t" << duration_cast<nanoseconds>(t2 - t1).count() << '\n';
     for (size_t i = 0; i < row_; ++i) {
-        _aligned_free(m[i]); // ÊÍ·ÅÃ¿Ò»ÐÐµÄÄÚ´æ
+        _aligned_free(m[i]); // é‡Šæ”¾æ¯ä¸€è¡Œçš„å†…å­˜
     }
-    _aligned_free(m); // ÊÍ·ÅÐÐÖ¸ÕëÊý×éµÄÄÚ´æ
+    _aligned_free(m); // é‡Šæ”¾è¡ŒæŒ‡é’ˆæ•°ç»„çš„å†…å­˜
 }
 
 int main() {
